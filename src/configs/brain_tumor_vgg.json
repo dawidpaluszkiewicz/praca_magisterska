@@ -1,0 +1,9 @@
+{
+  "dataset": "brain_tumor",
+  "model": "vgg",
+  "batch_size": 32,
+  "lr": 0.01,
+  "optimizer": "adam",
+  "image_size": [224,224,3],
+  "number_of_dense_neurons": 512
+}
