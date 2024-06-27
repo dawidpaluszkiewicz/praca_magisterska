@@ -23,7 +23,7 @@ def get_data_generator(dataset: str, image_size=(224, 224), batch_size=32):
     )
 
     train_generator = train_datagen.flow_from_directory(
-        os.path.join("..", "data", "skin_cancer", "dataset", dataset),
+        os.path.join("..", "data", "eye_diseases", "dataset", dataset),
         target_size=image_size,
         batch_size=batch_size,
         class_mode="sparse",
@@ -36,37 +36,34 @@ def read_data():
     print(
         len(
             os.listdir(
-                os.path.join("..", "..", "data", "brain_tumor", "dataset", "train")
+                os.path.join("..", "..", "data", "eye_diseases", "dataset", "train")
             )
         )
     )
     print(
         len(
             os.listdir(
-                os.path.join("..", "..", "data", "brain_tumor", "dataset", "test")
+                os.path.join("..", "..", "data", "eye_diseases", "dataset", "test")
             )
         )
     )
     print(
         len(
             os.listdir(
-                os.path.join("..", "..", "data", "brain_tumor", "dataset", "val")
+                os.path.join("..", "..", "data", "eye_diseases", "dataset", "val")
             )
         )
     )
 
 
 def prepare_data_for_class(class_name):
-    # files = os.listdir(os.path.join('..', '..', 'data', 'skin_cancer', 'images'))
-    df = pd.read_csv(os.path.join("..", "..", "data", "skin_cancer", "GroundTruth.csv"))
-    print(len(df))
-    df = df[df[class_name] == 1]
-    print(df.head())
-    files = df.image.to_list()
+    files = os.listdir(
+        os.path.join("..", "..", "data", "eye_diseases", "data", class_name)
+    )
+
     random.shuffle(files)
 
     num_of_files = len(files)
-
     split_train = int(num_of_files * 0.8)
     split_test = int(num_of_files * 0.9)
 
@@ -75,8 +72,8 @@ def prepare_data_for_class(class_name):
     val = files[split_test:]
 
     print(f"train: {len(train)} files")
-    print(f"train: {len(test)} files")
-    print(f"train: {len(val)} files")
+    print(f"test: {len(test)} files")
+    print(f"val: {len(val)} files")
     #
     # # add class folders for train/test/val
     #
@@ -89,7 +86,7 @@ def prepare_data_for_class(class_name):
             "..",
             "..",
             "data",
-            "skin_cancer",
+            "eye_diseases",
             "dataset",
             "train",
             class_name,
@@ -103,17 +100,23 @@ def prepare_data_for_class(class_name):
             # print(file)
             shutil.copy(
                 os.path.join(
-                    "..", "..", "data", "skin_cancer", "images", file.strip() + ".jpg"
+                    "..",
+                    "..",
+                    "data",
+                    "eye_diseases",
+                    "data",
+                    class_name,
+                    file,
                 ),
                 os.path.join(
                     "..",
                     "..",
                     "data",
-                    "skin_cancer",
+                    "eye_diseases",
                     "dataset",
                     "train",
                     class_name,
-                    file + ".jpg",
+                    file,
                 ),
             )
         except Exception as e:
@@ -126,7 +129,7 @@ def prepare_data_for_class(class_name):
             "..",
             "..",
             "data",
-            "skin_cancer",
+            "eye_diseases",
             "dataset",
             "test",
             class_name,
@@ -140,17 +143,23 @@ def prepare_data_for_class(class_name):
             # print(file)
             shutil.copy(
                 os.path.join(
-                    "..", "..", "data", "skin_cancer", "images", file.strip() + ".jpg"
+                    "..",
+                    "..",
+                    "data",
+                    "eye_diseases",
+                    "data",
+                    class_name,
+                    file,
                 ),
                 os.path.join(
                     "..",
                     "..",
                     "data",
-                    "skin_cancer",
+                    "eye_diseases",
                     "dataset",
                     "test",
                     class_name,
-                    file + ".jpg",
+                    file,
                 ),
             )
         except Exception as e:
@@ -163,7 +172,7 @@ def prepare_data_for_class(class_name):
             "..",
             "..",
             "data",
-            "skin_cancer",
+            "eye_diseases",
             "dataset",
             "val",
             class_name,
@@ -177,17 +186,23 @@ def prepare_data_for_class(class_name):
             # print(file)
             shutil.copy(
                 os.path.join(
-                    "..", "..", "data", "skin_cancer", "images", file.strip() + ".jpg"
+                    "..",
+                    "..",
+                    "data",
+                    "eye_diseases",
+                    "data",
+                    class_name,
+                    file,
                 ),
                 os.path.join(
                     "..",
                     "..",
                     "data",
-                    "skin_cancer",
+                    "eye_diseases",
                     "dataset",
                     "val",
                     class_name,
-                    file + ".jpg",
+                    file,
                 ),
             )
         except Exception as e:
@@ -197,14 +212,10 @@ def prepare_data_for_class(class_name):
 
 
 def prepare_dataset():
-    prepare_data_for_class("MEL")
-    prepare_data_for_class("NV")
-    prepare_data_for_class("BCC")
-    prepare_data_for_class("AKIEC")
-    prepare_data_for_class("BKL")
-    prepare_data_for_class("DF")
-    prepare_data_for_class("VASC")
-
+    prepare_data_for_class("cataract")
+    prepare_data_for_class("diabetic_retinopathy")
+    prepare_data_for_class("glaucoma")
+    prepare_data_for_class("normal")
     pass
 
 

@@ -4,6 +4,11 @@ import random
 
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
+
+from PIL import ImageFile
+
+ImageFile.LOAD_TRUNCATED_IMAGES = True
+
 # Think about adding this as  parameters
 random.seed(123)
 IMAGE_SIZE = (224, 224)
@@ -31,21 +36,42 @@ def read_data():
     print(
         len(
             os.listdir(
-                os.path.join("..", "..", "data", "brain_tumor", "dataset", "train")
+                os.path.join("..", "..", "data", "brain_tumor", "dataset", "train", "healthy")
             )
         )
     )
     print(
         len(
             os.listdir(
-                os.path.join("..", "..", "data", "brain_tumor", "dataset", "test")
+                os.path.join("..", "..", "data", "brain_tumor", "dataset", "train", "tumor")
             )
         )
     )
     print(
         len(
             os.listdir(
-                os.path.join("..", "..", "data", "brain_tumor", "dataset", "val")
+                os.path.join("..", "..", "data", "brain_tumor", "dataset", "test", "healthy")
+            )
+        )
+    )
+    print(
+        len(
+            os.listdir(
+                os.path.join("..", "..", "data", "brain_tumor", "dataset", "test", "tumor")
+            )
+        )
+    )
+    print(
+        len(
+            os.listdir(
+                os.path.join("..", "..", "data", "brain_tumor", "dataset", "val", "healthy")
+            )
+        )
+    )
+    print(
+        len(
+            os.listdir(
+                os.path.join("..", "..", "data", "brain_tumor", "dataset", "val", "tumor")
             )
         )
     )
@@ -143,4 +169,5 @@ def prepare_dataset():
 
 
 if __name__ == "__main__":
-    prepare_dataset()
+    # prepare_dataset()
+    read_data()

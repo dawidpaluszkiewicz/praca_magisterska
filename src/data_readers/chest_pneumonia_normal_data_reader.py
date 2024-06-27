@@ -4,6 +4,10 @@ import random
 
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
+from PIL import ImageFile
+
+ImageFile.LOAD_TRUNCATED_IMAGES = True
+
 # Think about adding this as  parameters
 random.seed(123)
 IMAGE_SIZE = (224, 224)
@@ -18,7 +22,7 @@ def get_data_generator(dataset: str, image_size=(224, 224), batch_size=32):
     )
 
     train_generator = train_datagen.flow_from_directory(
-        os.path.join("..", "data", "chest_pneumonia_normal", "dataset", dataset),
+        os.path.join("..", "data", "chest_xray", "dataset", dataset),
         target_size=image_size,
         batch_size=batch_size,
         class_mode="binary",
@@ -31,22 +35,20 @@ def read_data():
     print(
         len(
             os.listdir(
-                os.path.join("..", "..", "data", "brain_tumor", "dataset", "train")
+                os.path.join("..", "..", "data", "chest_xray", "dataset", "train")
             )
         )
     )
     print(
         len(
             os.listdir(
-                os.path.join("..", "..", "data", "brain_tumor", "dataset", "test")
+                os.path.join("..", "..", "data", "chest_xray", "dataset", "test")
             )
         )
     )
     print(
         len(
-            os.listdir(
-                os.path.join("..", "..", "data", "brain_tumor", "dataset", "val")
-            )
+            os.listdir(os.path.join("..", "..", "data", "chest_xray", "dataset", "val"))
         )
     )
 
@@ -137,10 +139,67 @@ def prepare_data_for_class(class_name):
         )
 
 
-def prepare_dataset():
-    prepare_data_for_class("healthy")
-    prepare_data_for_class("tumor")
+# def prepare_dataset():
+#     prepare_data_for_class("healthy")
+#     prepare_data_for_class("tumor")
+
+
+# if __name__ == "__main__":
+#     prepare_dataset()
+
+
+import os
+import shutil
+import random
+
+
+def move_files_by_ratio(directory_1, directory_2, ratio):
+    # Get list of files in directory_1
+    files_in_dir1 = os.listdir(directory_1)
+
+    # Calculate the number of files to move
+    num_files_to_move = int(len(files_in_dir1) * ratio)
+
+    # Randomly select files to move
+    files_to_move = random.sample(files_in_dir1, num_files_to_move)
+
+    # Move the selected files to directory_2
+    for file_name in files_to_move:
+        source = os.path.join(directory_1, file_name)
+        destination = os.path.join(directory_2, file_name)
+        shutil.move(source, destination)
+
+
+import os
+
+
+def find_unique_extensions(directory):
+    unique_extensions = set()
+
+    for root, _, files in os.walk(directory):
+        for file in files:
+            _, ext = os.path.splitext(file)
+            if ext:
+                unique_extensions.add(ext.lower())
+
+    return unique_extensions
 
 
 if __name__ == "__main__":
-    prepare_dataset()
+    print(
+        find_unique_extensions(
+            os.path.join("..", "..", "data", "chest_xray", "dataset")
+        )
+    )
+
+    # move_files_by_ratio(
+    #     directory_1=os.path.join("..", "..", "data", "chest_xray", "dataset", "val", "NORMAL"),
+    #     directory_2=os.path.join("..", "..", "data", "chest_xray", "dataset", "test", "NORMAL"),
+    #     ratio=0.33
+    # )
+
+    # move_files_by_ratio(
+    #     directory_1=os.path.join("..", "..", "data", "chest_xray", "dataset", "test", "PNEUMONIA"),
+    #     directory_2=os.path.join("..", "..", "data", "chest_xray", "dataset", "val", "PNEUMONIA"),
+    #     ratio=0.5
+    # )

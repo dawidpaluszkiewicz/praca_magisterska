@@ -4,6 +4,10 @@ import random
 
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
+from PIL import ImageFile
+
+ImageFile.LOAD_TRUNCATED_IMAGES = True
+
 # Think about adding this as  parameters
 random.seed(123)
 IMAGE_SIZE = (224, 224)
@@ -18,7 +22,7 @@ def get_data_generator(dataset: str, image_size=(224, 224), batch_size=32):
     )
 
     train_generator = train_datagen.flow_from_directory(
-        os.path.join("..", "data", "brain_tumor", "dataset", dataset),
+        os.path.join("..", "data", "mnist_healthcare", "dataset", dataset),
         target_size=image_size,
         batch_size=batch_size,
         class_mode="sparse",
@@ -31,21 +35,21 @@ def read_data():
     print(
         len(
             os.listdir(
-                os.path.join("..", "..", "data", "brain_tumor", "dataset", "train")
+                os.path.join("..", "..", "data", "mnist_healthcare", "dataset", "train")
             )
         )
     )
     print(
         len(
             os.listdir(
-                os.path.join("..", "..", "data", "brain_tumor", "dataset", "test")
+                os.path.join("..", "..", "data", "mnist_healthcare", "dataset", "test")
             )
         )
     )
     print(
         len(
             os.listdir(
-                os.path.join("..", "..", "data", "brain_tumor", "dataset", "val")
+                os.path.join("..", "..", "data", "mnist_healthcare", "dataset", "val")
             )
         )
     )
@@ -70,6 +74,18 @@ def prepare_data_for_class(class_name):
 
     # add class folders for train/test/val
 
+    os.makedirs(
+        os.path.join(
+            "..",
+            "..",
+            "data",
+            "mnist_healthcare",
+            "dataset",
+            "train",
+            class_name,
+        ),
+        exist_ok=True,
+    )
     for file in train:
         new_file_name = (
             file.replace("(", "")
@@ -92,6 +108,18 @@ def prepare_data_for_class(class_name):
             ),
         )
 
+    os.makedirs(
+        os.path.join(
+            "..",
+            "..",
+            "data",
+            "mnist_healthcare",
+            "dataset",
+            "test",
+            class_name,
+        ),
+        exist_ok=True,
+    )
     for file in test:
         new_file_name = (
             file.replace("(", "")
@@ -114,6 +142,18 @@ def prepare_data_for_class(class_name):
             ),
         )
 
+    os.makedirs(
+        os.path.join(
+            "..",
+            "..",
+            "data",
+            "mnist_healthcare",
+            "dataset",
+            "val",
+            class_name,
+        ),
+        exist_ok=True,
+    )
     for file in val:
         new_file_name = (
             file.replace("(", "")
@@ -144,7 +184,6 @@ def prepare_dataset():
     prepare_data_for_class("CXR")
     prepare_data_for_class("Hand")
     prepare_data_for_class("HeadCT")
-    prepare_data_for_class("tumor")
 
 
 if __name__ == "__main__":
