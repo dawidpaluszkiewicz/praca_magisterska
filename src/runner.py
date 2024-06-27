@@ -3,7 +3,7 @@ from train import run_experiment, MODEL_MAPPING
 
 DATASETS = ["brain_tumor", "mnist", "skin_cancer"]
 
-IMAGE_SIZES = [[112, 112, 3]] #[64, 64, 3]
+IMAGE_SIZES = [[112, 112, 3]]  # [64, 64, 3]
 OPTIMIZERS = "RMSprop"
 DENSE_NEURONS = [256, 128]
 BATCH_SIZES = [16, 8]
@@ -17,9 +17,9 @@ DEFAULT_UNFREEZE_WEIGHTS = False
 
 
 def main():
-    with tf.device('/gpu:0'):
+    with tf.device("/gpu:0"):
         for model in MODEL_MAPPING.keys():
-            data_set = "brain_tumor"
+            data_set = "dementia"
             run_experiment(
                 data_set=data_set,
                 model_name=model,
@@ -27,11 +27,11 @@ def main():
                 optimizer=DEFAULT_OPTIMIZER,
                 number_of_dense_neurons=DEFAULT_DENSE_NEURONS,
                 batch_size=DEFAULT_BATCH_SIZE,
-                unfreeze_neurons=DEFAULT_UNFREEZE_WEIGHTS
+                unfreeze_neurons=DEFAULT_UNFREEZE_WEIGHTS,
             )
 
             for image_size in IMAGE_SIZES:
-                if model == 'xception':
+                if model == "xception":
                     continue
                 run_experiment(
                     data_set=data_set,
@@ -40,7 +40,7 @@ def main():
                     optimizer=DEFAULT_OPTIMIZER,
                     number_of_dense_neurons=DEFAULT_DENSE_NEURONS,
                     batch_size=DEFAULT_BATCH_SIZE,
-                    unfreeze_neurons=DEFAULT_UNFREEZE_WEIGHTS
+                    unfreeze_neurons=DEFAULT_UNFREEZE_WEIGHTS,
                 )
 
             for dense_neurons in DENSE_NEURONS:
@@ -51,7 +51,7 @@ def main():
                     optimizer=DEFAULT_OPTIMIZER,
                     number_of_dense_neurons=dense_neurons,
                     batch_size=DEFAULT_BATCH_SIZE,
-                    unfreeze_neurons=DEFAULT_UNFREEZE_WEIGHTS
+                    unfreeze_neurons=DEFAULT_UNFREEZE_WEIGHTS,
                 )
 
             for batch_size in BATCH_SIZES:
@@ -62,7 +62,7 @@ def main():
                     optimizer=DEFAULT_OPTIMIZER,
                     number_of_dense_neurons=DEFAULT_DENSE_NEURONS,
                     batch_size=batch_size,
-                    unfreeze_neurons=DEFAULT_UNFREEZE_WEIGHTS
+                    unfreeze_neurons=DEFAULT_UNFREEZE_WEIGHTS,
                 )
 
             run_experiment(
@@ -72,7 +72,7 @@ def main():
                 optimizer=OPTIMIZERS,
                 number_of_dense_neurons=DEFAULT_DENSE_NEURONS,
                 batch_size=DEFAULT_BATCH_SIZE,
-                unfreeze_neurons=DEFAULT_UNFREEZE_WEIGHTS
+                unfreeze_neurons=DEFAULT_UNFREEZE_WEIGHTS,
             )
 
             run_experiment(
@@ -82,7 +82,7 @@ def main():
                 optimizer=DEFAULT_OPTIMIZER,
                 number_of_dense_neurons=DEFAULT_DENSE_NEURONS,
                 batch_size=DEFAULT_BATCH_SIZE,
-                unfreeze_neurons=UNFREEZE_WEIGHTS
+                unfreeze_neurons=UNFREEZE_WEIGHTS,
             )
 
 

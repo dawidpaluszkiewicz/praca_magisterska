@@ -1,16 +1,16 @@
 import os
 import tensorflow as tf
-import wandb
+import mlflow
+import mlflow.tensorflow
 import time
 import shutil
-
-from wandb.keras import WandbCallback
 
 from data_readers import mnist_reader
 from data_readers import skin_cancer_data_loader
 from data_readers import brain_tumor_data_reader
 from data_readers import chest_pneumonia_normal_data_reader
-
+from data_readers import eye_diseases_data_reader
+from data_readers import dementia_data_reader
 
 from tensorflow.keras.layers import (
     Conv2D,
@@ -39,7 +39,7 @@ DATA_MAPPING = {
         "generator": brain_tumor_data_reader.get_data_generator,
         "num_classes": 2,
     },
-    "chest_pneumonia": {
+    "chest_xray": {
         "generator": chest_pneumonia_normal_data_reader.get_data_generator,
         "num_classes": 2,
     },
@@ -48,14 +48,23 @@ DATA_MAPPING = {
         "num_classes": 7,
     },
     "mnist": {"generator": mnist_reader.get_data_generator, "num_classes": 6},
+    "eye_disease": {
+        "generator": eye_diseases_data_reader.get_data_generator,
+        "num_classes": 4,
+    },
+    "dementia": {
+        "generator": dementia_data_reader.get_data_generator,
+        "num_classes": 4,
+    },
 }
 
 MODEL_MAPPING = {
     "vgg": tf.keras.applications.vgg16.VGG16,
     "resnet": tf.keras.applications.resnet50.ResNet50,
-    'mobile_net': tf.keras.applications.mobilenet_v2.MobileNetV2,
-    'xception': tf.keras.applications.xception.Xception,
-    # 'efficientnet': tf.keras.applications.efficientnet.EfficientNetB7,
+    "mobile_net": tf.keras.applications.mobilenet_v2.MobileNetV2,
+    "xception": tf.keras.applications.xception.Xception,
+    "nasnet": tf.keras.applications.nasnet.NASNetLarge,
+    "densenet": tf.keras.applications.densenet.DenseNet201,
 }
 
 
@@ -65,13 +74,15 @@ def prepare_model(
     optimizer="adam",
     number_of_dense_neurons=512,
     num_classes=2,
-    batch_size=32
+    batch_size=32,
 ):
     pre_model = model(input_shape=input_shape, include_top=False, weights="imagenet")
 
     if optimizer == "adam":
         lr_denominator = batch_size / 32
-        optimizer = tf.keras.optimizers.legacy.Adam(learning_rate=0.001 / lr_denominator)
+        optimizer = tf.keras.optimizers.legacy.Adam(
+            learning_rate=0.001 / lr_denominator
+        )
 
     for layer in pre_model.layers:
         layer.trainable = False
@@ -82,13 +93,20 @@ def prepare_model(
 
     if num_classes == 2:
         x = Dense(1, activation="sigmoid")(x)
-        metrics = ["accuracy", AUC(), Precision(), Recall()]
+        metrics = [
+            "accuracy",
+            AUC(name="AUC"),
+            Precision(name="Precision"),
+            Recall(name="Recall"),
+        ]
     else:
         x = Dense(num_classes, activation="softmax")(x)
         metrics = [
             SparseCategoricalAccuracy(name="acc"),
             SparseTopKCategoricalAccuracy(k=2, name="acc_top2"),
             SparseTopKCategoricalAccuracy(k=3, name="acc_top3"),
+            # Precision(name='Precision'),
+            # Recall(name='Recall')
         ]  # , SparseTopKCategoricalAccuracy(k=3), Precision(), Recall()]
 
     model = tf.keras.Model(pre_model.input, x)
@@ -110,13 +128,20 @@ def unfreeze_weights(model, num_classes):
 
     optimizer = Adam(learning_rate=0.00001)
     if num_classes == 2:
-        metrics = [Accuracy(), AUC(), Precision(), Recall()]
+        metrics = [
+            "accuracy",
+            AUC(name="AUC"),
+            Precision(name="Precision"),
+            Recall(name="Recall"),
+        ]
         model.compile(optimizer=optimizer, loss="binary_crossentropy", metrics=metrics)
     else:
         metrics = [
             SparseCategoricalAccuracy(name="acc"),
             SparseTopKCategoricalAccuracy(k=2, name="acc_top2"),
             SparseTopKCategoricalAccuracy(k=3, name="acc_top3"),
+            # Precision(name='Precision'),
+            # Recall(name='Recall')
         ]
         model.compile(
             optimizer=optimizer,
@@ -129,7 +154,7 @@ def unfreeze_weights(model, num_classes):
 def train_model(model, name, train, test, epochs=50):
     callbacks = []
     callbacks.append(tf.keras.callbacks.EarlyStopping(patience=3))
-    callbacks.append(WandbCallback())
+    callbacks.append(mlflow.tensorflow.MlflowCallback())
     callbacks.append(
         tf.keras.callbacks.ModelCheckpoint(
             os.path.join(".", "models", name), save_best_only=True
@@ -155,8 +180,7 @@ def run_experiment(
     number_of_dense_neurons,
     batch_size,
     unfreeze_neurons=False,
-):
-    run = wandb.init(project=data_set)
+) -> None:
 
     experiment_name = "_".join(
         [
@@ -166,12 +190,15 @@ def run_experiment(
             optimizer,
             str(number_of_dense_neurons),
             str(batch_size),
-            str(unfreeze_neurons)
+            str(unfreeze_neurons),
         ]
     )
 
-    run.name = experiment_name
-    run.save()
+    mlflow.set_experiment(data_set)
+    run = mlflow.start_run(run_name=experiment_name)
+
+    client = mlflow.client.MlflowClient()
+    client.set_tag(run.info.run_id, "model_tag", model_name)
 
     get_data_generator = DATA_MAPPING[data_set]["generator"]
     num_classes = DATA_MAPPING[data_set]["num_classes"]
@@ -207,29 +234,19 @@ def run_experiment(
     test_result = evaluate_model(model, val)
 
     if num_classes == 2:
-        wandb.log(
-            {
-                "test_loss": test_result[0],
-                "test_accuracy": test_result[1],
-                "test_auc": test_result[2],
-                "test_precision": test_result[3],
-                "test_recall": test_result[4],
-                "train_time": end_time - start_time,
-
-            }
-        )
+        mlflow.log_metric("test_loss", test_result[0])
+        mlflow.log_metric("test_accuracy", test_result[1])
+        mlflow.log_metric("test_auc", test_result[2])
+        mlflow.log_metric("test_precision", test_result[3])
+        mlflow.log_metric("test_recall", test_result[4])
+        mlflow.log_metric("train_time", end_time - start_time)
     else:
-        wandb.log(
-            {
-                "test_loss": test_result[0],
-                "test_accuracy": test_result[1],
-                "test_acc_top2": test_result[2],
-                "test_acc_top3": test_result[3],
-                "train_time": end_time - start_time,
-
-            }
-        )
+        mlflow.log_metric("test_loss", test_result[0])
+        mlflow.log_metric("test_accuracy", test_result[1])
+        mlflow.log_metric("test_acc_top2", test_result[2])
+        mlflow.log_metric("test_acc_top3", test_result[3])
+        mlflow.log_metric("train_time", end_time - start_time)
 
     # run.finish()
     shutil.rmtree(os.path.join(".", "models", experiment_name))
-    wandb.finish()
+    mlflow.end_run()
